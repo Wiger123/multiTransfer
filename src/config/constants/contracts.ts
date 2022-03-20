@@ -2,9 +2,9 @@ import { ChainId } from './chainId';
 
 export default {
   multiTransfer: {
-    [ChainId.BSC]: '0x7e8054D99098409e9dFCe6c8200A516459ef8De1',
-    [ChainId.Rinkeby]: '0x8aCca549cA148b87bCFDed610B8E1270599A2274',
-    [ChainId.Kovan]: '0x21dB03c96a26571EF011558F7e271F3a143739F4',
-    [ChainId.BSCTestnet]: '0xD601f4D5F7cd56AB1F3874Aab7d96922D956E23B',
+    [ChainId.BSC]: '0x6379082dA2C77D1A2f17B7947cE074416071879a',
+    [ChainId.Rinkeby]: '0xffA1578B4774342D557104dd4A9C543DD923691e',
+    [ChainId.Kovan]: '0x08bC330c2dBB267f5a46a9D9775df5AB9ceC0aA1',
+    [ChainId.BSCTestnet]: '0xDa3e46125B9a21a835b012dCa0B4a3EFEB3bE31B',
   },
 };

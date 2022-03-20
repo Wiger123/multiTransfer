@@ -1,6 +1,5 @@
 import useActiveWeb3React from './useActiveWeb3React';
 import { useMemo } from 'react';
-import { getBep20Contract, getBep20TransferContract } from '@/utils/contractHelp';
 import { getProviderOrSigner } from '../utils';
 import { AddressZero } from '@ethersproject/constants';
 import { Contract } from '@ethersproject/contracts';
@@ -11,6 +10,10 @@ import bep20Abi from '@/config/abi/erc20.json';
 import { isAddress } from '@/utils/address';
 
 export const useERC20 = (address: string, withSignerIfPossible = true) => {
+  return useContract(address, bep20Abi, withSignerIfPossible);
+};
+
+export const getERC20 = (address: string, withSignerIfPossible = true) => {
   return useContract(address, bep20Abi, withSignerIfPossible);
 };
 

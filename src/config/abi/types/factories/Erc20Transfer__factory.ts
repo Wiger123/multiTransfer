@@ -27,14 +27,29 @@ const _abi = [
     type: "event",
   },
   {
+    inputs: [],
+    name: "renounceOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [
       {
-        internalType: "address",
-        name: "_token",
-        type: "address",
+        internalType: "uint256",
+        name: "_fee",
+        type: "uint256",
       },
+    ],
+    name: "setFee",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
       {
-        internalType: "address[]",
+        internalType: "address payable[]",
         name: "to",
         type: "address[]",
       },
@@ -44,7 +59,38 @@ const _abi = [
         type: "uint256",
       },
     ],
-    name: "batch_transfer",
+    name: "transferEth",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "newOwner",
+        type: "address",
+      },
+    ],
+    name: "transferOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address payable[]",
+        name: "to",
+        type: "address[]",
+      },
+      {
+        internalType: "uint256[]",
+        name: "amount",
+        type: "uint256[]",
+      },
+    ],
+    name: "transferProEth",
     outputs: [],
     stateMutability: "payable",
     type: "function",
@@ -67,7 +113,7 @@ const _abi = [
         type: "uint256[]",
       },
     ],
-    name: "batch_transfer2",
+    name: "transferProToken",
     outputs: [],
     stateMutability: "payable",
     type: "function",
@@ -75,7 +121,12 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "address payable[]",
+        internalType: "address",
+        name: "_token",
+        type: "address",
+      },
+      {
+        internalType: "address[]",
         name: "to",
         type: "address[]",
       },
@@ -85,7 +136,7 @@ const _abi = [
         type: "uint256",
       },
     ],
-    name: "batch_transfer_bnb",
+    name: "transferToken",
     outputs: [],
     stateMutability: "payable",
     type: "function",
@@ -114,39 +165,6 @@ const _abi = [
       },
     ],
     stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "renounceOwnership",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_fee",
-        type: "uint256",
-      },
-    ],
-    name: "setFee",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "newOwner",
-        type: "address",
-      },
-    ],
-    name: "transferOwnership",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   },
 ];

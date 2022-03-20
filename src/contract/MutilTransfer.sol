@@ -513,7 +513,7 @@ contract MutilTransfer is Ownable {
     using SafeERC20 for IERC20;
     uint256 public fee = 0; //手续费
 
-    function batch_transfer_bnb(address payable[] memory to, uint256 amount)
+    function transferEth(address payable[] memory to, uint256 amount)
         public
         payable
     {
@@ -522,31 +522,55 @@ contract MutilTransfer is Ownable {
             msg.value == length.mul(amount).add(fee),
             "Transfer amount error"
         );
-        for (uint256 i = 0; i < to.length; i++) {
+
+        payable(owner()).transfer(fee);
+        for (uint256 i = 0; i < length; i++) {
             to[i].transfer(amount);
         }
     }
 
-    function batch_transfer(
+    function transferProEth(address payable[] memory to, uint256[] memory amount)
+        public
+        payable
+    {
+        uint256 length = to.length;
+        require(to.length == amount.length, "Transfer length error");
+        uint allAmount;
+        for (uint256 i = 0; i < length; i++) {
+            allAmount += amount[i];
+        }
+        require(msg.value == allAmount.add(fee), "Transfer amount error");
+        payable(owner()).transfer(fee);
+        for (uint256 i = 0; i < length; i++) {
+            to[i].transfer(amount[i]);
+        }
+    }
+
+    function transferToken(
         address _token,
         address[] memory to,
         uint256 amount
     ) public payable {
         IERC20 token = IERC20(_token);
         require(fee == msg.value, "Transfer amount error");
-        for (uint256 i = 0; i < to.length; i++) {
+        payable(owner()).transfer(fee);
+        uint256 length = to.length;
+        for (uint256 i = 0; i < length; i++) {
             token.safeTransferFrom(msg.sender, to[i], amount);
         }
     }
 
-    function batch_transfer2(
+    function transferProToken(
         address _token,
         address[] memory to,
         uint256[] memory amount
     ) public payable {
         IERC20 token = IERC20(_token);
         require(fee == msg.value, "Transfer amount error");
-        for (uint256 i = 0; i < to.length; i++) {
+        require(to.length == amount.length, "Transfer length error");
+        payable(owner()).transfer(fee);
+        uint256 length = to.length;
+        for (uint256 i = 0; i < length; i++) {
             token.safeTransferFrom(msg.sender, to[i], amount[i]);
         }
     }

@@ -21,30 +21,17 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 export interface Erc20TransferInterface extends utils.Interface {
   contractName: "Erc20Transfer";
   functions: {
-    "batch_transfer(address,address[],uint256)": FunctionFragment;
-    "batch_transfer2(address,address[],uint256[])": FunctionFragment;
-    "batch_transfer_bnb(address[],uint256)": FunctionFragment;
-    "fee()": FunctionFragment;
-    "owner()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "setFee(uint256)": FunctionFragment;
+    "transferEth(address[],uint256)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
+    "transferProEth(address[],uint256[])": FunctionFragment;
+    "transferProToken(address,address[],uint256[])": FunctionFragment;
+    "transferToken(address,address[],uint256)": FunctionFragment;
+    "fee()": FunctionFragment;
+    "owner()": FunctionFragment;
   };
 
-  encodeFunctionData(
-    functionFragment: "batch_transfer",
-    values: [string, string[], BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "batch_transfer2",
-    values: [string, string[], BigNumberish[]]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "batch_transfer_bnb",
-    values: [string[], BigNumberish]
-  ): string;
-  encodeFunctionData(functionFragment: "fee", values?: undefined): string;
-  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
     values?: undefined
@@ -54,33 +41,55 @@ export interface Erc20TransferInterface extends utils.Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "transferEth",
+    values: [string[], BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "transferOwnership",
     values: [string]
   ): string;
+  encodeFunctionData(
+    functionFragment: "transferProEth",
+    values: [string[], BigNumberish[]]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "transferProToken",
+    values: [string, string[], BigNumberish[]]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "transferToken",
+    values: [string, string[], BigNumberish]
+  ): string;
+  encodeFunctionData(functionFragment: "fee", values?: undefined): string;
+  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
 
-  decodeFunctionResult(
-    functionFragment: "batch_transfer",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "batch_transfer2",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "batch_transfer_bnb",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "fee", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "setFee", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "transferEth",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "transferProEth",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "transferProToken",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "transferToken",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "fee", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
 
   events: {
     "OwnershipTransferred(address,address)": EventFragment;
@@ -125,30 +134,6 @@ export interface Erc20Transfer extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
-    batch_transfer(
-      _token: string,
-      to: string[],
-      amount: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    batch_transfer2(
-      _token: string,
-      to: string[],
-      amount: BigNumberish[],
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    batch_transfer_bnb(
-      to: string[],
-      amount: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    fee(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    owner(overrides?: CallOverrides): Promise<[string]>;
-
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -158,35 +143,41 @@ export interface Erc20Transfer extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    transferEth(
+      to: string[],
+      amount: BigNumberish,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     transferOwnership(
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    transferProEth(
+      to: string[],
+      amount: BigNumberish[],
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    transferProToken(
+      _token: string,
+      to: string[],
+      amount: BigNumberish[],
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    transferToken(
+      _token: string,
+      to: string[],
+      amount: BigNumberish,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    fee(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    owner(overrides?: CallOverrides): Promise<[string]>;
   };
-
-  batch_transfer(
-    _token: string,
-    to: string[],
-    amount: BigNumberish,
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  batch_transfer2(
-    _token: string,
-    to: string[],
-    amount: BigNumberish[],
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  batch_transfer_bnb(
-    to: string[],
-    amount: BigNumberish,
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  fee(overrides?: CallOverrides): Promise<BigNumber>;
-
-  owner(overrides?: CallOverrides): Promise<string>;
 
   renounceOwnership(
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -197,27 +188,72 @@ export interface Erc20Transfer extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  transferEth(
+    to: string[],
+    amount: BigNumberish,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   transferOwnership(
     newOwner: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  transferProEth(
+    to: string[],
+    amount: BigNumberish[],
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  transferProToken(
+    _token: string,
+    to: string[],
+    amount: BigNumberish[],
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  transferToken(
+    _token: string,
+    to: string[],
+    amount: BigNumberish,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  fee(overrides?: CallOverrides): Promise<BigNumber>;
+
+  owner(overrides?: CallOverrides): Promise<string>;
+
   callStatic: {
-    batch_transfer(
-      _token: string,
+    renounceOwnership(overrides?: CallOverrides): Promise<void>;
+
+    setFee(_fee: BigNumberish, overrides?: CallOverrides): Promise<void>;
+
+    transferEth(
       to: string[],
       amount: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    batch_transfer2(
+    transferOwnership(
+      newOwner: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    transferProEth(
+      to: string[],
+      amount: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    transferProToken(
       _token: string,
       to: string[],
       amount: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<void>;
 
-    batch_transfer_bnb(
+    transferToken(
+      _token: string,
       to: string[],
       amount: BigNumberish,
       overrides?: CallOverrides
@@ -226,15 +262,6 @@ export interface Erc20Transfer extends BaseContract {
     fee(overrides?: CallOverrides): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<string>;
-
-    renounceOwnership(overrides?: CallOverrides): Promise<void>;
-
-    setFee(_fee: BigNumberish, overrides?: CallOverrides): Promise<void>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
   };
 
   filters: {
@@ -249,21 +276,41 @@ export interface Erc20Transfer extends BaseContract {
   };
 
   estimateGas: {
-    batch_transfer(
-      _token: string,
+    renounceOwnership(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setFee(
+      _fee: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    transferEth(
       to: string[],
       amount: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    batch_transfer2(
+    transferOwnership(
+      newOwner: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    transferProEth(
+      to: string[],
+      amount: BigNumberish[],
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    transferProToken(
       _token: string,
       to: string[],
       amount: BigNumberish[],
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    batch_transfer_bnb(
+    transferToken(
+      _token: string,
       to: string[],
       amount: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
@@ -272,38 +319,44 @@ export interface Erc20Transfer extends BaseContract {
     fee(overrides?: CallOverrides): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<BigNumber>;
+  };
 
+  populateTransaction: {
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
+    ): Promise<PopulatedTransaction>;
 
     setFee(
       _fee: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
+    ): Promise<PopulatedTransaction>;
 
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-  };
-
-  populateTransaction: {
-    batch_transfer(
-      _token: string,
+    transferEth(
       to: string[],
       amount: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    batch_transfer2(
+    transferOwnership(
+      newOwner: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    transferProEth(
+      to: string[],
+      amount: BigNumberish[],
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    transferProToken(
       _token: string,
       to: string[],
       amount: BigNumberish[],
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    batch_transfer_bnb(
+    transferToken(
+      _token: string,
       to: string[],
       amount: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
@@ -312,19 +365,5 @@ export interface Erc20Transfer extends BaseContract {
     fee(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    renounceOwnership(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setFee(
-      _fee: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
   };
 }

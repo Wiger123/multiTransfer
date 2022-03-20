@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Select, Input, Slider, Table, message } from 'antd';
+import { Button, Select, Input, Table, message } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useERC20, useBep20TransferContract } from '../hooks/useContract';
-import { formatAmount, accMul, parseAmount, accGt, accAdd, toFixed } from '@/utils/formatBalance';
+import { formatAmount, accAdd, accGt, toFixed, parseAmount } from '@/utils/formatBalance';
+
 import { getMultiTransferAddress } from '@/utils/addressHelpers';
 import { MaxUint256 } from '@ethersproject/constants';
 import DEFAULT_TOKEN_LIST from '@/config/tokens';
@@ -13,18 +14,18 @@ import useActiveWeb3React from '@/hooks/useActiveWeb3React';
 import { isAddress, isAddressSimple } from '@/utils/address';
 import { Erc20 } from '@/config/abi/types';
 import { Link } from 'react-router-dom';
+import { checkNumber } from '@/utils/number';
+import { Contract } from '@ethersproject/contracts';
 import { ethers } from 'ethers';
-import { useBalance, useAllowance, useTransferFee, useTransferGasFee } from '@/hooks/useBatchTransfer';
+import { useAllowance, useBalance, useProTransferGasFee, useTransferFee, useTransferGasFee } from '@/hooks/useBatchTransfer';
 
 const { Option } = Select;
 const { TextArea } = Input;
 interface ISetInfo {
-  amount: string;
   token: Token;
   addressList: string[];
   addressInput: string;
   tokenList: Token[];
-  setAmount: (amount: string) => void;
   setToken: (token: Token) => void;
   setAddressList: (addressList: string[]) => void;
   setStep: (step: number) => void;
@@ -32,7 +33,6 @@ interface ISetInfo {
   setAddressInput?: (addressInput: string) => void;
 }
 interface ITransferDetail {
-  amount: string;
   token: Token;
   addressList: string[];
   setAddressList: (addressList: string[]) => void;
@@ -41,7 +41,8 @@ interface ITransferDetail {
 }
 function SetInfo(prop: ISetInfo) {
   const { account, chainId } = useActiveWeb3React();
-  const { amount, addressList, token, setAmount, setToken, tokenList, addressInput, setAddressInput, setTokenList, setAddressList, setStep } = prop;
+  const { addressList, token, setToken, tokenList, addressInput, setAddressInput, setTokenList, setAddressList, setStep } = prop;
+
   const [searchValue, setSearchValue] = useState<string>('');
 
   const address = useMemo(() => {
@@ -64,7 +65,7 @@ function SetInfo(prop: ISetInfo) {
           const token = { symbol, name, decimals: decimals.toString(), address, chainId };
           setTokenList([...tokenList, token]);
         } catch (e) {
-          //
+          // setTokenList(tokenList);
         }
       }
     };
@@ -74,7 +75,16 @@ function SetInfo(prop: ISetInfo) {
   const errAddressList = useMemo(() => {
     const err = [];
     addressList.forEach((item, index) => {
-      if (isAddress(item) !== item && item !== '') {
+      try {
+        const address = item.split(',')[0];
+        const amount = item.split(',')[1];
+        if (item == '') {
+          return;
+        }
+        if ((isAddressSimple(address) === false && address !== '') || !checkNumber(amount)) {
+          err.push({ address: item, index });
+        }
+      } catch (e) {
         err.push({ address: item, index });
       }
     });
@@ -84,7 +94,7 @@ function SetInfo(prop: ISetInfo) {
           return (
             <div key={item.index} className="">
               <div>
-                第{item.index + 1}行 {item.address} 不是一个有效的钱包地址
+                第{item.index + 1}行 {item.address} 不是一个有效的钱包地址或者数量有问题
               </div>
             </div>
           );
@@ -175,34 +185,22 @@ function SetInfo(prop: ISetInfo) {
 
       <div className="">
         <div className="my-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <div className="mr-4  font-bold">每个地址发送</div>
-            <Input
-              value={amount}
-              onChange={(e) => {
-                setAmount(e.target.value);
-              }}
-              className="bg-gray-100"
-              style={{ width: '100px' }}
-              bordered={false}
-            />
-            <div className="ml-2 font-bold">{token.symbol}</div>
-          </div>
+          <div className="flex items-center"></div>
           <div
             className="text-gray-400 cursor-pointer"
             style={{ height: '30px' }}
             onClick={() => {
-              setAddressInput('0x742606C36817f6BeB1eD806838E57217260dF9F3');
-              setAddressList(['0x742606C36817f6BeB1eD806838E57217260dF9F3']);
+              setAddressInput('0x742606C36817f6BeB1eD806838E57217260dF9F3,0.1\n0x86Af7b8f32B7979F48B66343F96Ed1F8A35F97E5,0.2');
+              setAddressList(['0x742606C36817f6BeB1eD806838E57217260dF9F3,0.1', '0x86Af7b8f32B7979F48B66343F96Ed1F8A35F97E5,0.2']);
             }}
           >
             查看例子
           </div>
         </div>
         <div>
-          给每个地址发送不同数量? 使用
-          <Link to="/pro">
-            <span className="text-green-500 font-bold cursor-pointer"> 专业版</span>
+          返回使用
+          <Link to="/">
+            <span className="text-green-500 font-bold cursor-pointer"> 普通版</span>
           </Link>
         </div>
       </div>
@@ -226,30 +224,39 @@ function SetInfo(prop: ISetInfo) {
 
 function TransferDetail(prop: ITransferDetail) {
   const { account, chainId } = useActiveWeb3React();
-  const { amount, addressList, token, setAddressList, setAddressInput, setStep } = prop;
+  const { addressList, token, setAddressList, setAddressInput, setStep } = prop;
 
-  const { allAmount, tableList, toAddressList } = useMemo(() => {
+  // 获取转账数量数组 获取转账总数量
+  const { tokenAmountList, allAmount, tableList, toAddressList } = useMemo(() => {
     const filterInput = addressList.filter((item) => {
       return item !== '';
     });
     let allAmount = '0';
     const toAddressList = [];
+    const tokenAmountList = [];
     const tableList = [];
     filterInput.forEach((item, index) => {
-      toAddressList.push(item);
-      tableList.push({ to: item, amount, ...token, key: index });
+      const arr = item.split(',');
+      const to = arr[0];
+      const amount = parseFloat(arr[1]).toString();
+      toAddressList.push(to);
+      const tokenAmount = parseAmount(amount, token.decimals);
+      tokenAmountList.push(tokenAmount.toString());
+      allAmount = accAdd(allAmount, tokenAmount);
+      tableList.push({ to, amount, ...token, key: index });
     });
-    allAmount = accMul(parseAmount(amount, token.decimals), toAddressList.length);
-    return { allAmount, tableList, toAddressList };
+
+    return { tokenAmountList, allAmount, tableList, toAddressList };
   }, [addressList]);
 
-  const [loading, setLoading] = useState<boolean>(false);
-  const { fee } = useTransferFee();
   const { isApproved, getAllowance } = useAllowance(token, account, getMultiTransferAddress(chainId));
   const { bnbBalance, tokenBalance, getBalance } = useBalance(token, account);
-  const { allFee, errorMessage } = useTransferGasFee({ token, isApproved, amount, toAddressList, allAmount, fee });
+  const { fee } = useTransferFee();
+  const { allFee, errorMessage } = useProTransferGasFee({ token, isApproved, tokenAmountList, toAddressList, allAmount, fee });
+  const [loading, setLoading] = useState<boolean>(false);
   const bep20Contract = useERC20(token.address);
   const bep20TransferContract = useBep20TransferContract();
+
   const columns = [
     {
       title: '钱包地址',
@@ -286,6 +293,7 @@ function TransferDetail(prop: ITransferDetail) {
       ),
     },
   ];
+
   return (
     <div>
       <div className="overflow-x-hidden">
@@ -319,7 +327,9 @@ function TransferDetail(prop: ITransferDetail) {
             <div>
               {formatAmount(allFee)} {NATIVE[chainId]?.symbol}
             </div>
-            预估手续费(含额外手续费 {formatAmount(fee)} {NATIVE[chainId]?.symbol})
+            <div>
+              预估手续费(含额外手续费 {formatAmount(fee)} {NATIVE[chainId]?.symbol})
+            </div>
           </div>
           <div className="w-3/6 p-4">
             <div>
@@ -348,13 +358,12 @@ function TransferDetail(prop: ITransferDetail) {
               try {
                 let tx;
                 setLoading(true);
-                const tokenAmount = parseAmount(amount, token.decimals);
                 if (isEth(token, chainId)) {
-                  tx = await bep20TransferContract.transferEth(toAddressList, tokenAmount.toString(), {
+                  tx = await bep20TransferContract.transferProEth(toAddressList, tokenAmountList, {
                     value: accAdd(allAmount, fee),
                   });
                 } else {
-                  tx = await bep20TransferContract.transferToken(token.address, toAddressList, tokenAmount.toString(), {
+                  tx = await bep20TransferContract.transferProToken(token.address, toAddressList, tokenAmountList, {
                     value: fee,
                   });
                 }
@@ -400,15 +409,11 @@ function TransferDetail(prop: ITransferDetail) {
 export default function BatchTransfer() {
   const { chainId } = useActiveWeb3React();
   const [setp, setStep] = useState<number>(0);
-  const [amount, setAmount] = useState<string>('1');
   const [addressList, setAddressList] = useState<string[]>([]);
   const [addressInput, setAddressInput] = useState<string>('');
   const [token, setToken] = useState<Token>({ address: '', name: '', symbol: '', decimals: 18, chainId });
   const [tokenList, setTokenList] = useState<Token[]>([]);
 
-  const handleAmount = (amount: string) => {
-    setAmount(amount);
-  };
   const handleToken = (token: Token) => {
     setToken(token);
   };
@@ -450,13 +455,11 @@ export default function BatchTransfer() {
       <div className="text-base text-primary font-bold">批量发送代币</div>
       {setp == 0 ? (
         <SetInfo
-          amount={amount}
           token={token}
           tokenList={tokenList}
           addressList={addressList}
           addressInput={addressInput}
           setAddressInput={handleAddressInput}
-          setAmount={handleAmount}
           setToken={handleToken}
           setAddressList={handleAddressList}
           setTokenList={handleTokenList}
@@ -464,7 +467,6 @@ export default function BatchTransfer() {
         />
       ) : (
         <TransferDetail
-          amount={amount}
           token={token}
           addressList={addressList}
           setAddressInput={handleAddressInput}

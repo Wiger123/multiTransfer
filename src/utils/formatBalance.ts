@@ -1,74 +1,133 @@
 import BigNumber from 'bignumber.js';
-import { BigNumber as EthersBigNumber } from '@ethersproject/bignumber';
-import { formatUnits } from '@ethersproject/units';
-import { BIG_TEN } from './bigNumber';
 
-/**
- * Take a formatted amount, e.g. 15 BNB and convert it to full decimal value, e.g. 15000000000000000
- */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const getDecimalAmount = (amount: BigNumber, decimals = 18) => {
-  return new BigNumber(amount).times(BIG_TEN.pow(decimals));
-};
+export function parseAmount(amount: string, decimal = 18) {
+  if (!amount) return '0';
 
-export const getBalanceAmount = (amount: BigNumber, decimals = 18) => {
-  return new BigNumber(amount).dividedBy(BIG_TEN.pow(decimals));
-};
+  amount = cleanupAmount(amount);
 
-/**
- * This function is not really necessary but is used throughout the site.
- */
-export const getBalanceNumber = (balance: BigNumber, decimals = 18) => {
-  return getBalanceAmount(balance, decimals).toNumber();
-};
+  const split = amount.split('.');
+  const wholePart = split[0];
+  const fracPart = split[1] || '';
+  if (split.length > 2 || fracPart.length > decimal) {
+    throw new Error(`Cannot parse '${amount}' as bignumber`);
+  }
+  return trimLeadingZeroes(wholePart + fracPart.padEnd(decimal, '0'));
+}
+export function formatAmount(amount: string, decimal = 18) {
+  if (!amount) return '0';
 
-export const getFullDisplayBalance = (balance: BigNumber, decimals = 18, displayDecimals?: number) => {
-  return getBalanceAmount(balance, decimals).toFixed(displayDecimals);
-};
+  const amountBN = new BigNumber(amount, 10);
+  amount = amountBN.toString(10);
+  const wholeStr = amount.substring(0, amount.length - decimal) || '0';
+  const fractionStr = amount
+    .substring(amount.length - decimal)
+    .padStart(decimal, '0')
+    .substring(0, decimal);
 
-// export const formatNumber = (number: number, minPrecision = 2, maxPrecision = 2) => {
-//   const options = {
-//     minimumFractionDigits: minPrecision,
-//     maximumFractionDigits: maxPrecision,
+  return trimTrailingZeroes(`${wholeStr}.${fractionStr}`);
+}
+
+export function cleanupAmount(amount) {
+  return amount.replace(/,/g, '').trim();
+}
+
+export function trimTrailingZeroes(value) {
+  return value.replace(/\.?0*$/, '');
+}
+
+export function trimLeadingZeroes(value) {
+  value = value.replace(/^0+/, '');
+  if (value === '') {
+    return '0';
+  }
+  return value;
+}
+
+export function formatWithCommas(value) {
+  const pattern = /(-?\d+)(\d{3})/;
+  while (pattern.test(value)) {
+    value = value.replace(pattern, '$1,$2');
+  }
+  return value;
+}
+
+export function toFixed(number, pp) {
+  let num = isNaN(number) || !number ? 0 : number;
+  const p = isNaN(pp) || !pp ? 0 : pp;
+  num = getFullNum(num);
+  const n = (num + '').split('.');
+  let x = n.length > 1 ? n[1] : '';
+  if (x.length > p) {
+    x = x.substr(0, p);
+  } else {
+    x += Array(p - x.length + 1).join('0');
+  }
+  return n[0] + (x == '' ? '' : '.' + x);
+}
+export function accMul(arg1, arg2) {
+  if (!arg1 || !arg2) {
+    return '0';
+  }
+  const num = new BigNumber(arg1).times(new BigNumber(arg2));
+  return num.toString();
+}
+
+export function getFullNum(num) {
+  // 处理非数字
+  if (isNaN(num)) {
+    return num;
+  }
+  const str = String(num);
+  if (!/e/i.test(str)) {
+    return num;
+  }
+  return Number(num)
+    .toFixed(18)
+    .replace(/\.?0+$/, '');
+}
+
+export function accDiv(arg1: string, arg2: string) {
+  if (!arg1 || !arg2) {
+    return 0;
+  }
+  const num = new BigNumber(arg1).div(new BigNumber(arg2));
+  return num.toFixed();
+}
+
+export function accAdd(arg1: string, arg2: string) {
+  const num = new BigNumber(arg1).plus(new BigNumber(arg2));
+  return num.toFixed();
+}
+export function accSub(arg1: string, arg2: string) {
+  const num = new BigNumber(arg1).minus(new BigNumber(arg2));
+  return num.toFixed();
+}
+
+// 大于等于
+export function accGte(arg1: string, arg2: string) {
+  return new BigNumber(arg1).gte(new BigNumber(arg2));
+}
+
+// 大于
+export function accGt(arg1: string, arg2: string) {
+  return new BigNumber(arg1).gt(new BigNumber(arg2));
+}
+
+export function gasProcessing(arg1) {
+  return toFixed(accMul(new BigNumber(arg1), 1.1), 0);
+}
+
+// export function toPrecision(arg1) {
+//   let num = new BigNumber(arg1);
+//   if (accGte(num, 1000)) {
+//     return toFixed(num, 0);
 //   }
-//   return number.toLocaleString(undefined, options)
+
+//   num = num.toPrecision(4);
+//   if (num.includes('e')) {
+//     const [num1, uint] = num.split('e');
+//     const newUint = Number(uint);
+//     num = accMul(new BigNumber(num1).toString(10), new BigNumber(10).pow(newUint).toString(10));
+//   }
+//   return num;
 // }
-
-// /**
-//  * Method to format the display of wei given an EthersBigNumber object
-//  * Note: does NOT round
-//  */
-export const formatBigNumber = (number: EthersBigNumber, displayDecimals = 18, decimals = 18) => {
-  const remainder = number.mod(EthersBigNumber.from(10).pow(decimals - displayDecimals));
-  return formatUnits(number.sub(remainder), decimals);
-};
-
-// /**
-//  * Method to format the display of wei given an EthersBigNumber object with toFixed
-//  * Note: rounds
-//  */
-export const formatBigNumberToFixed = (number: EthersBigNumber, displayDecimals = 18, decimals = 18) => {
-  const formattedString = formatUnits(number, decimals);
-  return (+formattedString).toFixed(displayDecimals);
-};
-
-// /**
-//  * Formats a FixedNumber like BigNumber
-//  * i.e. Formats 9763410526137450427.1196 into 9.763 (3 display decimals)
-//  */
-// export const formatFixedNumber = (number: FixedNumber, displayDecimals = 18, decimals = 18) => {
-//   // Remove decimal
-//   const [leftSide] = number.toString().split('.')
-//   return formatBigNumber(EthersBigNumber.from(leftSide), displayDecimals, decimals)
-// }
-
-// export const formatLocalisedCompactNumber = (number: number): string => {
-//   const codeFromStorage = getLanguageCodeFromLS()
-//   return new Intl.NumberFormat(codeFromStorage, {
-//     notation: 'compact',
-//     compactDisplay: 'long',
-//     maximumSignificantDigits: 2,
-//   }).format(number)
-// }
-
-// export default formatLocalisedCompactNumber
